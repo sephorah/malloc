@@ -1,10 +1,13 @@
-SRC 		= 		src/malloc.c
+SRC 		= 		src/malloc.c \
+					src/free.c
 
-TSRC		=		tests/tests_malloc.c
+TSRC		=		src/main.c
 
 OBJ 		=		$(SRC:.c=.o)
 
 NAME 		=	 	libmalloc.so
+
+CPPFLAGS	=		-iquote include/
 
 CFLAGS 		=		-fPIC -Werror -Wall -Wextra
 
@@ -27,12 +30,11 @@ clean:
 
 fclean: clean
 	$(RM) $(NAME)
-	$(RM) unit_tests*
+	$(RM) test_main
 
 re: fclean all
 
-tests_run:
-	$(CC) $(TSRC) --coverage -lcriterion -o unit_tests
-	./unit_tests
+test:
+	$(CC) $(TSRC) -o test_main $(CPPFLAGS)
 
-.PHONY:	fclean clean all re tests_run debug
+.PHONY:	fclean clean all re test debug
