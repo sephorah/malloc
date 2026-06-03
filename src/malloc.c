@@ -97,6 +97,7 @@ void *find_free_block(size_t size)
     header_t *block_tmp_header = NULL;
     size_t *block_tmp_prev = NULL;
     size_t *block_tmp_next = NULL;
+    if (block_tmp_next && block_tmp_prev) {};
 
     // size_t count = 0;
     size_t size_tmp = 0;
@@ -272,6 +273,8 @@ void *add_free_block(size_t payload_size)
     size_t block_size = 0;
     size_t optional_padding_size = 0;
 
+    if (optional_padding && new_heap_end) {};
+
     // payload_start = block_tmp + HEADER_SIZE;
     // fprintf(stderr, "Payload start %p %ld %lb\n", payload_start, *(header_t *)payload_start, *(header_t *)payload_start);
     // return payload_start;
@@ -326,6 +329,8 @@ void init_heap(void)
     fprintf(stderr, "===== BEFORE CREATING HEAP END =====\n");
     fprintf(stderr, "Current break %p %ld\n", get_current_break(), (size_t)get_current_break());
     size_t *heap_end = init_block(0);
+
+    if (heap_end) {};
     // OR
     //  init_block(0);
     fprintf(stderr, "===== AFTER CREATING HEAP END =====\n");
@@ -403,3 +408,5 @@ void *malloc(size_t size)
 // rendre fonctions statiques
 // store the address of the first free block in prologue
 // next point to payload
+// gdb --args ls / -ltrR
+// set environment LD_PRELOAD /home/sephorahaniambossou/delivery/quant/malloc/libmalloc.so 

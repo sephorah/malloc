@@ -31,7 +31,10 @@ int main(void)
     //     // perror("Error ");
     // }
 
-    // fprintf(stderr, "First malloc\n");
+
+
+
+    fprintf(stderr, "First malloc\n");
     char *str = malloc(sizeof(char) * 14);
     if (str == NULL)
     {
@@ -76,10 +79,21 @@ int main(void)
         // free(str3);
     }
 
-    // fprintf(stderr, "FREE STR3\n");
-    // free(str3);
-    // fprintf(stderr, "FREE STR2\n");
-    // free(str2);
+    fprintf(stderr, "FREE STR3\n");
+    free(str3);
+    fprintf(stderr, "FREE STR2\n");
+    free(str2);
+
+
+
+    // realloc growth loop — what ls does to entry buffers
+    // char *p = malloc(8);
+    // for (int i = 0; i < 100; i++) p = realloc(p, 8 * (i + 2));
+    // // free-then-reuse loop — forces find_free_block
+    // void *a[50];
+    // for (int i = 0; i < 50; i++) a[i] = malloc(16 + (i % 7) * 8);
+    // for (int i = 0; i < 50; i += 2) free(a[i]);
+    // for (int i = 0; i < 50; i += 2) a[i] = malloc(16 + (i % 5) * 8);
 
     // if (str == NULL)
     // {
