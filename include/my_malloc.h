@@ -4,11 +4,17 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#define HEADER_SIZE 8
-#define ALIGNMENT_REQUIREMENT 8
+#define HEADER_SIZE 16
+#define ALIGNMENT_REQUIREMENT 16
 #define CHECK_BIT(number, position) ((number) & (1 << position))
 
 typedef size_t header_t;
+
+int is_allocated(header_t *header);
+
+size_t get_size(header_t *header);
+
+void *get_current_break(void);
 
 // typedef struct block
 // {

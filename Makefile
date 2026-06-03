@@ -1,5 +1,7 @@
 SRC 		= 		src/malloc.c \
-					src/free.c
+					src/free.c	\
+					src/heap_start.c \
+					src/utils.c
 
 TSRC		=		src/main.c
 
@@ -22,7 +24,7 @@ all: $(NAME)
 $(NAME): $(OBJ)
 	$(CC) $(LDFLAGS) -o $(NAME) $(OBJ)
 
-debug: CFLAGS += -g3
+debug: CFLAGS += -g3 -O0
 debug: re
 
 clean:
@@ -35,6 +37,6 @@ fclean: clean
 re: fclean all
 
 test:
-	$(CC) $(TSRC) -o test_main $(CPPFLAGS)
+	$(CC) $(TSRC) -g3 -O0 -o test_main $(CPPFLAGS)
 
 .PHONY:	fclean clean all re test debug
