@@ -7,7 +7,7 @@ int is_allocated(header_t *header)
 
 size_t get_size(header_t *header)
 {
-    return *header & ~(1 << 0); // clear bit position 0; MAKE FUNCTION
+    return CLEAR_BIT(*header);
 }
 
 void *get_current_break(void)
