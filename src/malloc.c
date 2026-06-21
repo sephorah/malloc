@@ -4,7 +4,7 @@ extern size_t *heap_start;
 
 size_t get_aligned_block_size(size_t payload_size)
 {
-    size_t total_size = HEADER_SIZE + payload_size;
+    size_t total_size = HEADER_SIZE * 2 + payload_size;
     size_t div = total_size / ALIGNMENT_REQUIREMENT;
     size_t res = div * ALIGNMENT_REQUIREMENT;
 
@@ -24,7 +24,7 @@ void *add_optional_padding(size_t size)
         perror("Error when allocating optional padding");
         return NULL;
     }
-    // fprintf(stderr, "\t[optional padding] %p (%ld) - %p (%ld)\n", optional_padding, (size_t)optional_padding, (size_t *)((size_t)optional_padding + size), ((size_t)optional_padding + size));
+    // // fprintf(stderr, "\t[optional padding] %p (%ld) - %p (%ld)\n", optional_padding, (size_t)optional_padding, (size_t *)((size_t)optional_padding + size), ((size_t)optional_padding + size));
     return optional_padding;
 }
 
@@ -54,7 +54,7 @@ void *find_free_block(size_t size)
             block_tmp_header = (header_t *)((size_t)block_tmp - HEADER_SIZE);
             *(header_t *)block_tmp_header = *(header_t *)block_tmp_header | (1 << 0); // MAKE FUNCTION FOR SETTING AND CLEAR BIT
             size_tmp = get_size(block_tmp_header);
-            fprintf(stderr, "[reused block] %p (%ld) - %p (%ld) : %ld bytes\n", block_tmp_header, (size_t)block_tmp_header, (size_t *)((size_t)block_tmp_header + size_tmp), (size_t)((size_t)block_tmp_header + size_tmp), size_tmp);
+            // fprintf(stderr, "[reused block] %p (%ld) - %p (%ld) : %ld bytes\n", block_tmp_header, (size_t)block_tmp_header, (size_t *)((size_t)block_tmp_header + size_tmp), (size_t)((size_t)block_tmp_header + size_tmp), size_tmp);
 
             *heap_start = *block_tmp_next;
             return block_tmp;
@@ -65,21 +65,22 @@ void *find_free_block(size_t size)
     return NULL;
 }
 
-header_t *init_header(size_t size)
+header_t *init_boundary_tag(size_t size)
 {
-    header_t *header_start = sbrk(HEADER_SIZE);
+    header_t *tag_start = sbrk(HEADER_SIZE);
 
-    if (header_start == (void *)-1)
+    if (tag_start == (void *)-1)
     {
         perror("Error when allocating header");
         return NULL;
     }
-    *header_start = size;
-    // fprintf(stderr, "\t[header] %p (%ld) - %p (%ld): %ld %lb\n", header_start, (size_t)header_start, (size_t *)((size_t)header_start + HEADER_SIZE), ((size_t)header_start + HEADER_SIZE), *header_start, *header_start);
-    return header_start;
+    *tag_start = size;
+    *(header_t *)tag_start = *(header_t *)tag_start | (1 << 0); // set bit position 0
+    // // fprintf(stderr, "\t[header] %p (%ld) - %p (%ld): %ld %lb\n", tag_start, (size_t)tag_start, (size_t *)((size_t)tag_start + HEADER_SIZE), ((size_t)tag_start + HEADER_SIZE), *tag_start, *tag_start);
+    return tag_start;
 }
 
-void *init_payload(size_t size, void *header_start)
+void *init_payload(size_t size)
 {
     void *payload_start = sbrk(size);
 
@@ -88,16 +89,28 @@ void *init_payload(size_t size, void *header_start)
         perror("Error when allocating payload");
         return NULL;
     }
-    *(header_t *)header_start = *(header_t *)header_start | (1 << 0); // set bit position 0
-    // fprintf(stderr, "\t[payload] %p (%ld) - %p (%ld)\n", payload_start, (size_t)payload_start, (size_t *)((size_t)payload_start + size), ((size_t)payload_start + size));
+    // // fprintf(stderr, "\t[payload] %p (%ld) - %p (%ld)\n", payload_start, (size_t)payload_start, (size_t *)((size_t)payload_start + size), ((size_t)payload_start + size));
     return payload_start;
+}
+
+void *init_epilogue()
+{
+    header_t *header_start = init_boundary_tag(HEADER_SIZE);
+
+    if (header_start == NULL)
+    {
+        return NULL;
+    }
+    // fprintf(stderr, "[new block] %p (%ld) - %p (%ld): %d bytes\n", header_start, (size_t)header_start, (size_t *)((size_t)header_start + HEADER_SIZE), (size_t)header_start + HEADER_SIZE, HEADER_SIZE);
+    return header_start + HEADER_SIZE;
 }
 
 void *init_block(size_t payload_size)
 {
     size_t block_size = get_aligned_block_size(payload_size);
-    size_t optional_padding_size = block_size - (HEADER_SIZE + payload_size);
-    header_t *header_start = init_header(block_size);
+    size_t optional_padding_size = block_size - (HEADER_SIZE * 2 + payload_size);
+    header_t *header_start = init_boundary_tag(block_size);
+    header_t *footer_start = NULL;
     size_t *block_end = (size_t *)((size_t)header_start + block_size);
     void *payload_start = NULL;
     void *optional_padding = NULL;
@@ -106,13 +119,21 @@ void *init_block(size_t payload_size)
     {
         return NULL;
     }
-    payload_start = init_payload(payload_size, header_start);
+    payload_start = init_payload(payload_size);
+    fprintf(stderr, "    Payload start %p\n", payload_start);
     if (payload_start == NULL)
     {
         return NULL;
     }
     optional_padding = add_optional_padding(optional_padding_size);
+    fprintf(stderr, "    Optional padding %p\n", optional_padding);
     if (optional_padding == NULL)
+    {
+        return NULL;
+    }
+    footer_start = init_boundary_tag(block_size);
+    fprintf(stderr, "    Footer start %p\n", footer_start);
+    if (footer_start == NULL)
     {
         return NULL;
     }
@@ -129,17 +150,26 @@ void *add_free_block(size_t payload_size)
     size_t block_size = 0;
     size_t optional_padding_size = 0;
 
+    size_t *footer_start = 0;
+    if (footer_start)
+    {
+    }
+
     if (new_block_header_address != NULL)
     {
         block_size = get_aligned_block_size(payload_size);
         block_end = (size_t *)((size_t)new_block_header_address + block_size);
+        if (block_end && new_heap_end)
+        {
+        };
         *new_block_header_address = block_size;
-        new_block_payload = init_payload(payload_size, new_block_header_address);
-        optional_padding_size = block_size - (HEADER_SIZE + payload_size);
+        new_block_payload = init_payload(payload_size);
+        optional_padding_size = block_size - (HEADER_SIZE * 2 + payload_size);
         add_optional_padding(optional_padding_size);
-        fprintf(stderr, "[heap end into new block] %p (%ld) - %p (%ld): %ld bytes\n", new_block_header_address, (size_t)new_block_header_address, block_end, (size_t)block_end, block_size);
-        new_heap_end = init_block(0);
-        fprintf(stderr, "heap end : %p\n", (size_t *)((size_t)new_heap_end - HEADER_SIZE));
+        footer_start = init_boundary_tag(block_size);
+        // fprintf(stderr, "[heap end into new block] %p (%ld) - %p (%ld): %ld bytes\n", new_block_header_address, (size_t)new_block_header_address, block_end, (size_t)block_end, block_size);
+        new_heap_end = init_epilogue();
+        // fprintf(stderr, "heap end : %p\n", (size_t *)((size_t)new_heap_end - HEADER_SIZE));
         return new_block_payload;
     }
     return NULL;
@@ -151,25 +181,31 @@ void init_heap(void)
     {
         return;
     }
-    fprintf(stderr, "----- Initiliazing the heap -----\n");
+    // fprintf(stderr, "----- Initiliazing the heap -----\n");
     heap_start = init_block(8);
-    fprintf(stderr, "break : %p\n", heap_start);
-    size_t *heap_end = init_block(0);
-    fprintf(stderr, "heap end : %p\n", heap_end);
-    fprintf(stderr, "----- Heap initialized -----\n");
+    // fprintf(stderr, "break : %p\n", heap_start);
+    size_t *heap_end = init_epilogue();
+    if (heap_end)
+    {
+    };
+    // fprintf(stderr, "heap end : %p\n", heap_end);
+    // fprintf(stderr, "----- Heap initialized -----\n");
 }
 
 void *malloc(size_t size)
 {
     void *free_block = NULL;
     size_t block_size = 0;
-
+    // fprintf(stderr, "--------------------NEW MALLOC\n");
     init_heap();
     if (heap_start == NULL)
     {
         perror("Error when initializing heap");
         return NULL;
     }
+    // fprintf(stderr, "--------------------AFTER INITIATING HEAP\n");
+
+    // check_valid_list();
     block_size = get_aligned_block_size(size);
     free_block = find_free_block(block_size);
     if (free_block == NULL)
@@ -178,12 +214,3 @@ void *malloc(size_t size)
     }
     return free_block;
 }
-
-// ENLEVER COMMENTAIRES, FAIRE FICHIERS POUR FONCTIONS (5 max par fichier)
-// LD_PRELOAD=./libmalloc.so ls / -ltrR
-// search test cases for memory allocator
-// rendre fonctions statiques
-// store the address of the first free block in prologue
-// next point to payload
-// gdb --args ls / -ltrR
-// set environment LD_PRELOAD /home/sephorahaniambossou/delivery/quant/malloc/libmalloc.so

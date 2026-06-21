@@ -1,7 +1,8 @@
-SRC 		= 		src/malloc.c \
-					src/free.c	\
-					src/heap_start.c \
-					src/utils.c
+SRC 		= 		src/malloc.c 		\
+					src/free.c			\
+					src/heap_start.c 	\
+					src/utils.c			\
+					src/realloc.c
 
 TSRC		=		src/main.c
 
