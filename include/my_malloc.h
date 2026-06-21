@@ -9,12 +9,13 @@
 #define ALIGNMENT_REQUIREMENT 16
 #define CHECK_BIT(number, position) ((number) & (1 << position))
 #define CLEAR_BIT(number) (number & ~(1 << 0))
+#define SET_BIT(number, position) (*(boundary_tag_t *)number | (1 << position))
 
-typedef size_t header_t;
+typedef size_t boundary_tag_t;
 
-int is_allocated(header_t *header);
+int is_allocated(boundary_tag_t *header);
 
-size_t get_size(header_t *header);
+size_t get_size(boundary_tag_t *header);
 
 void *get_current_break(void);
 
