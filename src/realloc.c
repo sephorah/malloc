@@ -1,22 +1,49 @@
 #include "my_malloc.h"
 
-bool check_available_space(void *ptr, size_t size)
+static bool check_available_space(void *ptr, size_t size)
 {
-    boundary_tag_t *header = ptr - HEADER_SIZE;
-    size_t block_size = get_size(header);
+    boundary_tag_t *header = ptr - BOUNDARY_TAG_SIZE;
+    size_t payload_size = get_size(header) - BOUNDARY_TAG_SIZE * 2;
 
-    if (block_size >= size)
+    if (payload_size >= size)
     {
         return true;
     }
-    // If we can, we should try to recycle the now-freed memory into another freed block.
     return false;
+}
+
+static size_t get_old_block_payload_size(size_t *ptr, size_t size)
+{
+    boundary_tag_t *header = (boundary_tag_t *)((size_t)ptr - BOUNDARY_TAG_SIZE);
+    size_t old_payload_size = get_size(header) - BOUNDARY_TAG_SIZE * 2;
+
+    if (size < old_payload_size)
+    {
+        return size;
+    }
+    else
+    {
+        return old_payload_size;
+    }
+}
+
+static void *allocate_new_block(void *ptr, size_t size)
+{
+    void *new_block = malloc(size);
+    size_t old_block_payload_size = 0;
+
+    if (new_block == NULL)
+    {
+        return ptr;
+    }
+    old_block_payload_size = get_old_block_payload_size(ptr, size);
+    memcpy(new_block, ptr, old_block_payload_size);
+    free(ptr);
+    return new_block;
 }
 
 void *realloc(void *ptr, size_t size)
 {
-    void *new_block = NULL;
-
     if (ptr == NULL)
     {
         return malloc(size);
@@ -30,8 +57,5 @@ void *realloc(void *ptr, size_t size)
     {
         return ptr;
     }
-    new_block = malloc(size);
-    memcpy(new_block, ptr, size);
-    free(ptr);
-    return new_block;
+    return allocate_new_block(ptr, size);
 }

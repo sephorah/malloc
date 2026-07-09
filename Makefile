@@ -1,10 +1,17 @@
-SRC 		= 		src/malloc.c 		\
-					src/free.c			\
-					src/heap_start.c 	\
-					src/utils.c			\
-					src/realloc.c
+SRC 		= 		src/malloc.c 			\
+					src/free.c				\
+					src/heap_start.c 		\
+					src/utils.c				\
+					src/realloc.c			\
+					src/merge_free_blocks.c \
+					src/calloc.c			\
+					src/init_block.c 		\
+					src/check_heap.c 		\
+					src/init_heap.c 		\
+					src/check_free_list.c 	\
 
-TSRC		=		src/main.c
+TSRC		=		tests/heap.c 			\
+					tests/free_list.c 		\
 
 OBJ 		=		$(SRC:.c=.o)
 
@@ -37,7 +44,8 @@ fclean: clean
 
 re: fclean all
 
-test:
-	$(CC) $(TSRC) -g3 -O0 -o test_main $(CPPFLAGS)
+tests_run:
+	$(CC) $(TSRC) --coverage -lcriterion -o unit_tests
+	./unit_tests
 
-.PHONY:	fclean clean all re test debug
+.PHONY:	fclean clean all re tests_run debug

@@ -1,11 +1,15 @@
 #ifndef MY_MALLOC_H_
 #define MY_MALLOC_H_
+
 #include <stdint.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#define HEADER_SIZE 16
+
+#define ERROR_CODE 84
+#define SUCCESS_CODE 0
+#define BOUNDARY_TAG_SIZE 16
 #define ALIGNMENT_REQUIREMENT 16
 #define CHECK_BIT(number, position) ((number) & (1 << position))
 #define CLEAR_BIT(number) (number & ~(1 << 0))
@@ -23,6 +27,26 @@ void *malloc(size_t size);
 
 void free(void *ptr);
 
-void check_valid_list();
+size_t *merge_free_blocks(size_t *current_block);
+
+void *init_epilogue(void);
+
+void init_heap(void);
+
+void *init_block(size_t payload_size);
+
+boundary_tag_t *init_boundary_tag(boundary_tag_t *tag_start, size_t size);
+
+size_t get_aligned_block_size(size_t payload_size);
+
+void *allocate_block(size_t size);
+
+size_t *add_optional_padding(size_t payload_size, void *start);
+
+bool is_address_valid(size_t *block_tmp);
+
+int check_heap(void);
+
+int check_valid_list(void);
 
 #endif /*MY_MALLOC_H_*/
