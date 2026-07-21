@@ -10,8 +10,7 @@ SRC 		= 		src/malloc.c 			\
 					src/init_heap.c 		\
 					src/check_free_list.c 	\
 
-TSRC		=		tests/heap.c 			\
-					tests/free_list.c 		\
+TSRC		=		tests/malloc.c 			\
 
 OBJ 		=		$(SRC:.c=.o)
 

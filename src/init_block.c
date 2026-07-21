@@ -2,8 +2,14 @@
 
 extern size_t *heap_start;
 
-size_t get_aligned_block_size(size_t payload_size)
+static size_t get_valid_payload_size(size_t original_size)
 {
+    return (original_size < 16) ? 16 : original_size;
+}
+
+size_t get_aligned_block_size(size_t original_payload_size)
+{
+    size_t payload_size = get_valid_payload_size(original_payload_size);
     size_t total_size = BOUNDARY_TAG_SIZE * 2 + payload_size;
     size_t div = total_size / ALIGNMENT_REQUIREMENT;
     size_t res = div * ALIGNMENT_REQUIREMENT;
@@ -33,7 +39,6 @@ void *allocate_block(size_t size)
 
     if (block_start == (void *)-1)
     {
-        fprintf(stderr, "Error when allocating header");
         return NULL;
     }
     return block_start;

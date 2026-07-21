@@ -17,6 +17,5 @@ void *calloc(size_t nmemb, size_t size)
         return NULL;
     }
     memset(memory, 0, nmemb * size);
-    // memset(memory, 0, nmemb);
     return memory;
 }

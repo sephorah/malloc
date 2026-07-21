@@ -78,7 +78,6 @@ void *malloc(size_t size)
     init_heap();
     if (heap_start == NULL)
     {
-        fprintf(stderr, "Error when initializing heap");
         return NULL;
     }
     block_size = get_aligned_block_size(size);

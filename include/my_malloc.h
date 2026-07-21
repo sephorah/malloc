@@ -47,6 +47,6 @@ bool is_address_valid(size_t *block_tmp);
 
 int check_heap(void);
 
-int check_valid_list(void);
+int check_free_list(void);
 
 #endif /*MY_MALLOC_H_*/
