@@ -10,7 +10,8 @@ This project involved rewriting `malloc`, `free`, `realloc` and `calloc` using `
 - First-fit: the allocator uses the first block in the free list that fits.
 - First-fit allocation time is linear in the number of free blocks.
 
-[image]
+
+<img width="933" height="560" alt="image" src="https://github.com/user-attachments/assets/020de70b-cf1a-42c7-9c2d-c48eed25412b" />
 
 ## Getting started
 
