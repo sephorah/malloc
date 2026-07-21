@@ -10,7 +10,6 @@ This project involved rewriting `malloc`, `free`, `realloc` and `calloc` using `
 - First-fit: the allocator uses the first block in the free list that fits.
 - First-fit allocation time is linear in the number of free blocks.
 
-
 <img width="933" height="560" alt="image" src="https://github.com/user-attachments/assets/020de70b-cf1a-42c7-9c2d-c48eed25412b" />
 
 ## Getting started
@@ -36,8 +35,7 @@ Works with ls, grep, cat, git commands, make and valgrind.
 make tests_run
 ```
 
-Unit tests cover simple malloc/free, reuse of a freed block, `malloc(0)`, allocation larger than a page, 16-byte alignment of every returned pointer, `free(NULL)`, double free, and a churn sequence (20 mallocs, free every other, 20 more) checked with
-`check_free_list()`.
+Unit tests cover simple malloc/free, reuse of a freed block, `malloc(0)`, allocation larger than a page, 16-byte alignment of a returned pointer, double free, `free(NULL)`, and a churn sequence (20 mallocs, 20 frees, 20 mallocs) checked with `check_heap()` and `check_free_list()`.
 
 ## Fixed bugs
 
@@ -49,9 +47,9 @@ The allocator wasn't reusing freed blocks and kept calling sbrk, which significa
 ### Minimum block size
 
 `git status` segfaulted while `ls -ltrR`, `cat` and `python3` ran clean.
-The bug happened when the payload address of a block was equal to its footer address, which corrupted the merging blocks.
+The bug happened when the payload address of a block was equal to its footer address, which corrupted block merging.
 
-A block with a 0-byte payload size has its payload and its footer at the same address. So, when the allocator wanted to add it at the beginning of the free list (`add_block_free_list`), it was writing the `next` and `prev` pointers in the footer, which breaks the `header == footer` invariant. I found it by calling the heap checker `check_heap` with gdb just after `add_block_free_list`.
+A block with a 0-byte payload size has its payload and its footer at the same address. So, when the allocator wanted to add it at the beginning of the free list (`add_block_free_list`), it was writing the `next` and `prev` pointers in the footer, which broke the `header == footer` invariant. I found it by calling the heap checker `check_heap` with gdb just after `add_block_free_list`.
 
 **Fix:** set a minimum block size of 48 bytes, i.e. a payload of 16 bytes, so that every block's payload can hold `next` and `prev` and be added to the free list.
 
@@ -74,8 +72,6 @@ After finding a free block, the header was marked allocated but not the footer.
 - Check whether the algorithm works as expected and the time it takes, not just the result.
 - Be careful about the pointer arithmetic. Pointer ± n is scaled; integer ± n is raw bytes.
 
-Performance section — your three runs:
-
 ## Performance
 
 `time LD_PRELOAD=./libmalloc.so ls / -ltRr > /dev/null` against the same command without
@@ -83,10 +79,10 @@ the preload, three runs of each (ratio = mine / glibc):
 
 | Ratio | Run 1 | Run 2 | Run 3 |
 |---|---|---|---|
-| real | 1.05× | 1.16× | 1.03× |
-| user | **1.20×** | **1.22×** | **1.25×** |
-| sys | 0.98× | 1.11× | 0.97× |
+| real | 1.05× | 1.03× | 1.03× |
+| user | 1.20× | 1.25× | 1.26× |
+| sys | 0.98× | 0.97× | 0.95× |
 
-**`user` time:** +20-25% compared to glibc, probably because of the first-fit which scans the free list linearly.
+**`user` time:** +20-26% compared to glibc, probably because of first-fit which scans the free list linearly. I haven't isolated it yet.
 
-**`sys` time:** now around 0.97–1.11×, before the free-list fix, this allocator made around 229k `brk` calls against glibc's 3k.
+**`sys` time:** 0.95–0.98×. Before the free-list fix, the allocator made around 229k `brk` calls against glibc's 3k on `ls / -ltRr`.

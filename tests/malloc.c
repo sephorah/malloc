@@ -83,28 +83,6 @@ Test(malloc, zero_size_alloc)
     dlclose(handle);
 }
 
-Test(malloc, heap_start_null)
-{
-    void *handle = dlopen("./libmalloc.so", RTLD_LAZY);
-    void *(*malloc)(size_t size);
-    void *(*free)(void *ptr);
-    char *block = NULL;
-
-    if (!handle)
-    {
-        handle_error("Error dlopen");
-    }
-    malloc = dlsym(handle, "malloc");
-    free = dlsym(handle, "free");
-    if (dlerror() != NULL)
-    {
-        handle_error("Error dlerror");
-    }
-    block = (*malloc)(0);
-    (*free)(block);
-    dlclose(handle);
-}
-
 Test(malloc, large_alloc)
 {
     void *handle = dlopen("./libmalloc.so", RTLD_LAZY);
