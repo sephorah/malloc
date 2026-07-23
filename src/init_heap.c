@@ -10,14 +10,16 @@ void *init_epilogue(void)
     {
         return NULL;
     }
-    *block_start = BOUNDARY_TAG_SIZE;
-    *block_start = SET_BIT(block_start, 0);
+    init_boundary_tag(block_start, BOUNDARY_TAG_SIZE); //change
+    // *block_start = BOUNDARY_TAG_SIZE;
+    // mark_boundary_tag_allocated(block_start);
+    // *block_start = SET_BIT(*block_start, 0);
     return block_start;
 }
 
 void init_heap(void)
 {
-    if ((size_t *)heap_start != NULL)
+    if (heap_start != NULL) // change
     {
         return;
     }

@@ -35,7 +35,7 @@ void free(void *ptr)
     {
         return;
     }
-    header_address = ptr - BOUNDARY_TAG_SIZE;
+    header_address = get_header(ptr); // ptr - BOUNDARY_TAG_SIZE; // helper header function ?
     if (!is_allocated(header_address))
     {
         return;

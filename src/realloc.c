@@ -2,8 +2,8 @@
 
 static bool check_available_space(void *ptr, size_t size)
 {
-    boundary_tag_t *header = ptr - BOUNDARY_TAG_SIZE;
-    size_t payload_size = get_size(header) - BOUNDARY_TAG_SIZE * 2;
+    boundary_tag_t *header = get_header(ptr);                       // header helper done function
+    size_t payload_size = get_size(header) - BOUNDARY_TAG_SIZE * 2; // get payload size helper
 
     if (payload_size >= size)
     {
@@ -14,8 +14,8 @@ static bool check_available_space(void *ptr, size_t size)
 
 static size_t get_old_block_payload_size(size_t *ptr, size_t size)
 {
-    boundary_tag_t *header = (boundary_tag_t *)((size_t)ptr - BOUNDARY_TAG_SIZE);
-    size_t old_payload_size = get_size(header) - BOUNDARY_TAG_SIZE * 2;
+    boundary_tag_t *header = get_header(ptr);                           // header helper done function
+    size_t old_payload_size = get_size(header) - BOUNDARY_TAG_SIZE * 2; // get payload size helper
 
     if (size < old_payload_size)
     {

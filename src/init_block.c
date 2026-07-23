@@ -26,11 +26,13 @@ size_t *add_optional_padding(size_t payload_size, void *start)
     return (size_t *)((size_t)start + payload_size);
 }
 
-boundary_tag_t *init_boundary_tag(boundary_tag_t *tag_start, size_t size)
+boundary_tag_t *init_boundary_tag(boundary_tag_t *tag, size_t size)
 {
-    *tag_start = size;
-    *tag_start = SET_BIT(tag_start, 0);
-    return tag_start;
+    // fprintf(stderr, "HEY %ld\n", size);
+    *tag = size;
+    mark_boundary_tag_allocated(tag);
+    // *tag = SET_BIT(tag, 0);
+    return tag;
 }
 
 void *allocate_block(size_t size)

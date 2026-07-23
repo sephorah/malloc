@@ -3,20 +3,20 @@
 
 extern size_t *heap_start;
 
-bool is_address_valid(size_t *block_tmp)
+bool is_address_valid(size_t *block)
 {
-    return (size_t)heap_start - BOUNDARY_TAG_SIZE <= (size_t)block_tmp && (size_t)block_tmp <= (size_t)get_current_break();
+    return ((size_t)heap_start - BOUNDARY_TAG_SIZE <= (size_t)block) && ((size_t)block <= (size_t)get_current_break());
 }
 
-static int check_errors_valid_list(size_t *block_tmp)
+static int check_errors_valid_list(size_t *block)
 {
-    boundary_tag_t *block_tmp_header = (boundary_tag_t *)((size_t)block_tmp - BOUNDARY_TAG_SIZE);
+    boundary_tag_t *block_header = get_header(block); // header helper done function
 
-    if (!is_address_valid(block_tmp))
+    if (!is_address_valid(block))
     {
         return ERROR_CODE;
     }
-    if (block_tmp_header && is_allocated(block_tmp_header))
+    if (block_header && is_allocated(block_header))
     {
         return ERROR_CODE;
     }
@@ -25,12 +25,13 @@ static int check_errors_valid_list(size_t *block_tmp)
 
 static size_t *get_next_element(size_t *block)
 {
-    size_t *block_tmp_next = (size_t *)((size_t)block);
+    size_t *block_next = (size_t *)((size_t)block);
 
-    if (block_tmp_next == NULL) {
+    if (block_next == NULL)
+    {
         return NULL;
     }
-    return (size_t *)(*block_tmp_next);
+    return (size_t *)(*block_next);
 }
 
 static bool detect_cycle(size_t *start)

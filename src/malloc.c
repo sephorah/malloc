@@ -2,17 +2,20 @@
 
 extern size_t *heap_start;
 
-void handle_free_block_found(boundary_tag_t *block_tmp_header, size_t *block_tmp_next, size_t *block_tmp, size_t size_tmp)
+void handle_free_block_found(boundary_tag_t *block_header, size_t *block_next, size_t *block_payload, size_t size)
 {
-    boundary_tag_t *block_tmp_footer = (boundary_tag_t *)((size_t)block_tmp + size_tmp - BOUNDARY_TAG_SIZE * 2);
-    size_t *block_tmp_prev = (size_t *)(block_tmp + 1);
+    boundary_tag_t *block_footer = get_footer(block_header, size); // footer helper function done
+    size_t *block_prev = block_payload + 1;
 
-    *(boundary_tag_t *)block_tmp_header = SET_BIT(block_tmp_header, 0);
-    *(boundary_tag_t *)block_tmp_footer = SET_BIT(block_tmp_footer, 0);
-    *(size_t *)(*block_tmp_prev) = *block_tmp_next;
-    if (*block_tmp_next != 0)
+    mark_boundary_tag_allocated(block_header); // SET_BIT(block_header, 0); // mark allocated helper function
+    mark_boundary_tag_allocated(block_footer); // SET_BIT(block_tmp_footer, 0); // mark allocated helper function
+
+    // *(boundary_tag_t *)block_header = mark_boundary_tag_allocated(block_header); // SET_BIT(block_header, 0); // mark allocated helper function
+    // *(boundary_tag_t *)block_footer = mark_boundary_tag_allocated(block_footer); // SET_BIT(block_tmp_footer, 0); // mark allocated helper function
+    *(size_t *)(*block_prev) = *block_next;
+    if (*block_next != 0)
     {
-        *(size_t *)(*block_tmp_next + sizeof(size_t)) = *block_tmp_prev;
+        *(size_t *)(*block_next + sizeof(size_t)) = *block_prev;
     }
 }
 
@@ -25,7 +28,7 @@ static void *traverse_free_list(size_t size)
 
     while (block_tmp != NULL)
     {
-        block_tmp_header = (boundary_tag_t *)((size_t)block_tmp - BOUNDARY_TAG_SIZE);
+        block_tmp_header = get_header(block_tmp); // header helper done function
         size_tmp = get_size(block_tmp_header);
         block_tmp_next = (size_t *)((size_t)block_tmp);
         if (size_tmp >= size)
@@ -49,7 +52,8 @@ static void *find_free_block(size_t size)
 
 static void *add_free_block(size_t payload_size)
 {
-    boundary_tag_t *new_block_header_address = (boundary_tag_t *)((size_t)get_current_break() - BOUNDARY_TAG_SIZE);
+    size_t *current_break = get_current_break();
+    boundary_tag_t *new_block_header_address = get_header(current_break); // (boundary_tag_t *)((size_t)get_current_break() - BOUNDARY_TAG_SIZE);
     void *new_block_payload = NULL;
     size_t block_size = 0;
     size_t optional_padding_size = 0;
@@ -58,8 +62,10 @@ static void *add_free_block(size_t payload_size)
     if (new_block_header_address != NULL)
     {
         block_size = get_aligned_block_size(payload_size);
-        *new_block_header_address = block_size;
-        *new_block_header_address = SET_BIT(new_block_header_address, 0);
+        init_boundary_tag(new_block_header_address, block_size); // change
+        // *new_block_header_address = block_size;
+        // mark_boundary_tag_allocated(new_block_header_address); // SET_BIT(new_block_header_address, 0);
+        // *new_block_header_address = mark_boundary_tag_allocated(new_block_header_address); // SET_BIT(new_block_header_address, 0);
         new_block_payload = allocate_block(block_size - BOUNDARY_TAG_SIZE);
         optional_padding_size = block_size - (BOUNDARY_TAG_SIZE * 2 + payload_size);
         optional_padding = add_optional_padding(payload_size, new_block_payload);

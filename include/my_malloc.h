@@ -11,9 +11,10 @@
 #define SUCCESS_CODE 0
 #define BOUNDARY_TAG_SIZE 16
 #define ALIGNMENT_REQUIREMENT 16
+#define EPILOGUE_SIZE 16
 #define CHECK_BIT(number, position) ((number) & (1 << position))
 #define CLEAR_BIT(number) (number & ~(1 << 0))
-#define SET_BIT(number, position) (*(boundary_tag_t *)number | (1 << position))
+#define SET_BIT(number, position) (number | (1 << position))
 
 typedef size_t boundary_tag_t;
 
@@ -48,5 +49,13 @@ bool is_address_valid(size_t *block_tmp);
 int check_heap(void);
 
 int check_free_list(void);
+
+boundary_tag_t *get_header(size_t *block_tmp);
+
+boundary_tag_t *get_footer(size_t *header, size_t size);
+
+void mark_boundary_tag_allocated(boundary_tag_t *tag);
+
+void mark_boundary_tag_free(boundary_tag_t *tag);
 
 #endif /*MY_MALLOC_H_*/
