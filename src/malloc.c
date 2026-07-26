@@ -1,23 +1,11 @@
 #include "my_malloc.h"
-// #include <stdio.h>
-// #include <stdlib.h>
+
 extern size_t *heap_start;
 
 static void handle_free_block_found(boundary_tag_t *block_header, size_t *block_payload, size_t size)
 {
-    // boundary_tag_t *block_old_footer = get_footer(block_header, previous_size);
-    // boundary_tag_t *block_footer = get_footer(block_header, size); // TO REMOVE
-    // size_t *block_prev = block_payload + 1;
-
-    // mark_boundary_tag_allocated(block_header); // TO REMOVE
-    // mark_boundary_tag_allocated(block_footer); // TO REMOVE
-    // mark_boundary_tag_allocated(block_old_footer);
-    // *(size_t *)(*block_prev) = *block_payload; // change
-    // if (*block_payload != 0) {
-    //     *(size_t *)(*block_payload + sizeof(size_t)) = *block_prev;
-    // }
-    remove_block_free_list(block_payload);     // change
-    handle_leftover_space(block_header, size); // change
+    remove_block_free_list(block_payload);
+    handle_leftover_space(block_header, size);
 }
 
 size_t *get_next_element(size_t *block)
@@ -39,29 +27,23 @@ static void *traverse_free_list(size_t size)
 {
     size_t *block_tmp = (size_t *)(*heap_start);
     boundary_tag_t *block_tmp_header = NULL;
-    // size_t *block_tmp_next = NULL;
     size_t size_tmp = 0;
-    // // fprintf(stderr, "Hey list malloc %ld\n", size);
 
     while (block_tmp != NULL) {
         block_tmp_header = get_header(block_tmp);
         size_tmp = get_size(*block_tmp_header);
-        // block_tmp_next = (size_t *)((size_t)block_tmp);
-        // fprintf(stderr, "In traverse free list header %ld size %ld\n", (size_t)block_tmp_header, size_tmp);
         if (size_tmp >= size) {
-            handle_free_block_found(block_tmp_header, block_tmp, size); // change to size for splitting
+            handle_free_block_found(block_tmp_header, block_tmp, size);
             return block_tmp;
         }
         block_tmp = get_next_element(block_tmp);
     }
-    // // fprintf(stderr, "Empty list malloc %ld\n", size);
     return NULL;
 }
 
 static void *find_free_block(size_t size)
 {
     if (*heap_start == 0) {
-        // // fprintf(stderr, "Heap start next null malloc %ld\n", size);
         return NULL;
     }
     return traverse_free_list(size);
@@ -106,12 +88,7 @@ void *malloc(size_t size)
         free_block = add_free_block(size);
         pthread_mutex_unlock(&heap_start_mutex);
         return free_block;
-        // fprintf(stderr, "Add new block malloc %ld\n", size);
     }
     pthread_mutex_unlock(&heap_start_mutex);
-    // if (check_heap() < 0 || check_free_list() < 0) {
-    //     // fprintf(stderr, "ERROR\n");
-    //     exit(1);
-    // }
     return free_block;
 }

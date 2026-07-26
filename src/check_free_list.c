@@ -1,11 +1,12 @@
 #include "my_malloc.h"
-// #include <stdio.h>
 
 extern size_t *heap_start;
 
 bool is_address_valid(size_t *block)
 {
-    return ((size_t)heap_start - BOUNDARY_TAG_SIZE <= (size_t)block) && ((size_t)block <= (size_t)get_current_break() && (size_t)block % ALIGNMENT_REQUIREMENT == 0);
+    return ((size_t)heap_start - BOUNDARY_TAG_SIZE <= (size_t)block)
+        && ((size_t)block <= (size_t)get_current_break()
+        && (size_t)block % ALIGNMENT_REQUIREMENT == 0);
 }
 
 static bool is_free_block_valid(size_t *payload_start)
@@ -37,7 +38,6 @@ static bool detect_cycle(size_t *start)
         if (fast == NULL) {
             return false;
         }
-        // fprintf(stderr, "Slow pointer %ld fast %ld || slow %ld fast %ld\n", (size_t)slow, (size_t)fast, *slow, *fast);
         if (*slow == *fast) {
             return true;
         }
@@ -62,9 +62,7 @@ int check_free_list()
             return -1;
         }
         total_free_blocks += 1;
-        // fprintf(stderr, "Free block Header %ld || Size : %ld allocated %d // counter %ld \n", (size_t)get_header(block_tmp), get_size(*get_header(block_tmp)), is_allocated(*get_header(block_tmp)), total_free_blocks);
         block_tmp = get_next_element(block_tmp);
     }
-    // fprintf(stderr, "Total free blocks heap %ld\n\n", total_free_blocks);
     return total_free_blocks;
 }

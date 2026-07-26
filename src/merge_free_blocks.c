@@ -1,5 +1,4 @@
 #include "my_malloc.h"
-// #include <stdio.h>
 
 void remove_block_free_list(size_t *block_payload)
 {
@@ -30,7 +29,6 @@ static boundary_tag_t *merge_next_block(size_t *current_block_header, size_t *cu
     *current_block_header = *next_block_footer;
     remove_block_free_list(next_block_payload);
     return next_block_footer;
-    // fprintf(stderr, "After merge current block footer %ld\n", (size_t)next_block_footer);
 }
 
 static boundary_tag_t *merge_prev_block(size_t *current_block_payload, boundary_tag_t *current_block_header, boundary_tag_t *current_block_footer)
@@ -50,17 +48,13 @@ static boundary_tag_t *merge_prev_block(size_t *current_block_payload, boundary_
 
 size_t *merge_free_blocks(size_t *current_block_payload)
 {
-    // fprintf(stderr, "Before merge current block %ld\n", (size_t)current_block_payload);
     boundary_tag_t *current_block_header = get_header(current_block_payload);
     size_t current_block_size = get_size(*current_block_header);
     boundary_tag_t *current_block_footer = get_footer(current_block_header, current_block_size);
 
-    // mark_boundary_tag_free(current_block_header);
-    // mark_boundary_tag_free(current_block_footer);
     current_block_header = merge_prev_block(current_block_payload, current_block_header, current_block_footer);
-    mark_boundary_tag_free(current_block_header);                                        // change
-    current_block_footer = merge_next_block(current_block_header, current_block_footer); // change
-    mark_boundary_tag_free(current_block_footer);                                        // change
-    // fprintf(stderr, "After merge current block %ld new header %ld\n\n", (size_t)current_block_payload, (size_t)current_block_header);
+    mark_boundary_tag_free(current_block_header);
+    current_block_footer = merge_next_block(current_block_header, current_block_footer);
+    mark_boundary_tag_free(current_block_footer);
     return current_block_payload;
 }

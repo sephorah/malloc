@@ -1,6 +1,4 @@
 #include "my_malloc.h"
-// #include <stdio.h>
-// #include <stdlib.h>
 extern size_t *heap_start;
 
 void add_block_free_list(size_t *ptr)
@@ -16,9 +14,7 @@ void add_block_free_list(size_t *ptr)
         *ptr = *heap_start;
         *ptr_prev = (size_t)heap_start;
         old_block_prev = (size_t *)(*heap_start + sizeof(size_t));
-        // if (is_address_valid(old_block_prev)) {
         *old_block_prev = (size_t)ptr;
-        // }
     } else {
         *ptr = 0;
         *ptr_prev = (size_t)heap_start;
@@ -31,7 +27,7 @@ void free(void *ptr)
     boundary_tag_t *header_address = NULL;
 
     pthread_mutex_lock(&heap_start_mutex);
-    if (ptr == NULL || heap_start == NULL) { // change!!
+    if (ptr == NULL || heap_start == NULL) {
         pthread_mutex_unlock(&heap_start_mutex);
         return;
     }
@@ -43,8 +39,4 @@ void free(void *ptr)
     add_block_free_list(ptr);
     merge_free_blocks(ptr);
     pthread_mutex_unlock(&heap_start_mutex);
-    // if (check_heap() < 0 || check_free_list() < 0) {
-    //     // fprintf(stderr, "ERROR\n");
-    //     exit(1);
-    // }
 }

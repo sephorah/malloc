@@ -15,7 +15,7 @@ void *init_epilogue(void)
 
 void init_heap(void)
 {
-    if (heap_start != NULL) // change
+    if (heap_start != NULL)
     {
         return;
     }

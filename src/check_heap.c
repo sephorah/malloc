@@ -1,5 +1,4 @@
 #include "my_malloc.h"
-// #include <stdio.h>
 
 extern size_t *heap_start;
 
@@ -33,25 +32,17 @@ bool is_block_valid(size_t *block_header)
     boundary_tag_t *block_footer = NULL;
 
     if (!is_boundary_tag_valid(block_header)) {
-        // fprintf(stderr, "1 free\n");
-        // fprintf(stderr, "Block header %ld\n", (size_t)block_header);
         return false;
     }
     size = get_size(*block_header);
     if (!is_size_valid(size)) {
-        // fprintf(stderr, "2 free %ld\n", size);
-        // fprintf(stderr, "Block header %ld\n", (size_t)block_header);
         return false;
     }
     block_footer = get_footer(block_header, size);
     if (!is_boundary_tag_valid(block_footer)) {
-        // fprintf(stderr, "3 free\n");
-        // fprintf(stderr, "Block header %ld %ld footer %ld\n", (size_t)block_header, *block_header, (size_t)block_footer);
         return false;
     }
     if (!check_tags_equality(block_header, block_footer)) {
-        // fprintf(stderr, "4 free\n");
-        // fprintf(stderr, "Block header %ld %ld footer %ld %ld\n", (size_t)block_header, *block_header, (size_t)block_footer, *block_footer);
         return false;
     }
     return true;
@@ -97,10 +88,8 @@ int check_heap(void)
         if (!is_block_valid(block_tmp_header)) {
             return -1;
         }
-        // fprintf(stderr, "Header %ld || Size : %ld allocated %d // counter %ld \n", (size_t)block_tmp_header, (size_t)size_tmp, is_allocated(*block_tmp_header), total_blocks);
         total_blocks += 1;
         block_tmp_header = (size_t *)((size_t)block_tmp_header + size_tmp);
     }
-    // fprintf(stderr, "Total blocks heap %ld\n\n", total_blocks);
     return total_blocks;
 }

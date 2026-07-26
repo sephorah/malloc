@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-// #include <stdio.h>
 #include <pthread.h>
 
 #define BOUNDARY_TAG_SIZE 16

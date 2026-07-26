@@ -1,6 +1,7 @@
 #include <criterion/criterion.h>
 #include <criterion/redirect.h>
 #include <dlfcn.h>
+#include <unistd.h>
 
 int handle_error(char *str)
 {
@@ -15,6 +16,7 @@ Test(malloc, simple_alloc_free)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
     char *str = NULL;
 
     if (!handle) {
@@ -24,19 +26,23 @@ Test(malloc, simple_alloc_free)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     str = (*malloc)(52);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     strcpy(str, "Epitech");
     cr_assert_str_eq(str, "Epitech");
     (*free)(str);
     cr_assert_eq((*check_heap)(), 3);
-    cr_assert_eq((*check_free_list)(), 1, "got %d\n", (*check_free_list)());
+    cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
 
@@ -47,6 +53,7 @@ Test(malloc, reuse_freed_block)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
     char *str = NULL;
     char *temp = NULL;
 
@@ -57,25 +64,31 @@ Test(malloc, reuse_freed_block)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     str = (*malloc)(8);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     temp = str;
     (*free)(str);
     cr_assert_eq((*check_heap)(), 3);
-    cr_assert_eq((*check_free_list)(), 1, "got %d\n", (*check_free_list)());
+    cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     str = (*malloc)(8);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     cr_assert_eq(str, temp);
     (*free)(str);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
 
@@ -86,6 +99,7 @@ Test(malloc, zero_size_alloc)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
     char *block = NULL;
 
     if (!handle) {
@@ -95,17 +109,21 @@ Test(malloc, zero_size_alloc)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     block = (*malloc)(0);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
-    cr_assert_eq((*check_free_list)(), 1, "got %d\n", (*check_free_list)());
+    cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
 
@@ -116,6 +134,7 @@ Test(malloc, large_alloc)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
     char *block = NULL;
 
     if (!handle) {
@@ -125,17 +144,21 @@ Test(malloc, large_alloc)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     block = (*malloc)(1000000);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
-    cr_assert_eq((*check_free_list)(), 1, "got %d\n", (*check_free_list)());
+    cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
 
@@ -146,6 +169,7 @@ Test(malloc, aligned_address)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
     char *block = NULL;
 
     if (!handle) {
@@ -155,17 +179,21 @@ Test(malloc, aligned_address)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     block = (*malloc)(100);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
-    cr_assert_eq((*check_free_list)(), 1, "got %d\n", (*check_free_list)());
+    cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
 
@@ -176,8 +204,11 @@ Test(malloc, many_mallocs)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
+    size_t *current_break = NULL;
+    size_t *new_current_break = NULL;
     char *blocks[30];
-    // // fprintf(stderr, "Many mallocs\n");
+
     if (!handle) {
         handle_error("Error dlopen");
     }
@@ -185,36 +216,41 @@ Test(malloc, many_mallocs)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     for (int i = 0; i < 20; i++) {
         blocks[i] = (*malloc)(100);
-        // // fprintf(stderr, "malloc block %ld %ld\n", i, blocks[i]);
     }
     cr_assert_eq((*check_heap)(), 22);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     for (int i = 0; i < 8; i++) {
         (*free)(blocks[i]);
-        // // fprintf(stderr, "free block %ld %ld\n", i, blocks[i]);
     }
+    current_break = sbrk(0);
     cr_assert_eq((*check_heap)(), 15);
     cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     for (int i = 20; i < 30; i++) {
         blocks[i] = (*malloc)(50);
     }
+    new_current_break = sbrk(0);
+    cr_assert_eq(current_break, new_current_break);
     cr_assert_eq((*check_heap)(), 25);
     cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     for (int i = 8; i < 30; i++) {
         (*free)(blocks[i]);
     }
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
-    // COMPARE TOTAL FREE BLOCKS IN FREE LIST AND HEAP
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
-    // // fprintf(stderr, "End test\n");
 }
 
 Test(free, handle_null)
@@ -223,6 +259,7 @@ Test(free, handle_null)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
 
     if (!handle) {
         handle_error("Error dlopen");
@@ -230,14 +267,17 @@ Test(free, handle_null)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     (*free)(NULL);
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
 
@@ -248,6 +288,7 @@ Test(free, double_free)
     void *(*free)(void *ptr);
     int (*check_heap)(void);
     int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
     char *block = NULL;
 
     if (!handle) {
@@ -257,21 +298,24 @@ Test(free, double_free)
     free = dlsym(handle, "free");
     check_heap = dlsym(handle, "check_heap");
     check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     block = (*malloc)(70);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
-
-// test splitting reuse smaller blocks
