@@ -1,26 +1,25 @@
 #include "my_malloc.h"
-
+// #include <stdio.h>
+// #include <stdlib.h>
 extern size_t *heap_start;
 
-static void add_block_free_list(size_t *ptr)
+void add_block_free_list(size_t *ptr)
 {
     size_t *ptr_prev = NULL;
     size_t *old_block_prev = NULL;
 
-    if (heap_start == NULL)
-    {
+    if (heap_start == NULL) {
         return;
     }
     ptr_prev = (size_t *)(ptr + 1);
-    if (*heap_start != 0)
-    {
+    if (*heap_start != 0) {
         *ptr = *heap_start;
         *ptr_prev = (size_t)heap_start;
         old_block_prev = (size_t *)(*heap_start + sizeof(size_t));
+        // if (is_address_valid(old_block_prev)) {
         *old_block_prev = (size_t)ptr;
-    }
-    else
-    {
+        // }
+    } else {
         *ptr = 0;
         *ptr_prev = (size_t)heap_start;
     }
@@ -31,15 +30,21 @@ void free(void *ptr)
 {
     boundary_tag_t *header_address = NULL;
 
-    if (ptr == NULL)
-    {
+    pthread_mutex_lock(&heap_start_mutex);
+    if (ptr == NULL || heap_start == NULL) { // change!!
+        pthread_mutex_unlock(&heap_start_mutex);
         return;
     }
-    header_address = get_header(ptr); // ptr - BOUNDARY_TAG_SIZE; // helper header function ?
-    if (!is_allocated(header_address))
-    {
+    header_address = get_header(ptr);
+    if (!is_allocated(*header_address)) {
+        pthread_mutex_unlock(&heap_start_mutex);
         return;
     }
     add_block_free_list(ptr);
     merge_free_blocks(ptr);
+    pthread_mutex_unlock(&heap_start_mutex);
+    // if (check_heap() < 0 || check_free_list() < 0) {
+    //     // fprintf(stderr, "ERROR\n");
+    //     exit(1);
+    // }
 }

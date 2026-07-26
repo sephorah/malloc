@@ -1,37 +1,24 @@
 #include "my_malloc.h"
-#include <stdlib.h>
+// #include <stdio.h>
 
 extern size_t *heap_start;
 
 bool is_address_valid(size_t *block)
 {
-    return ((size_t)heap_start - BOUNDARY_TAG_SIZE <= (size_t)block) && ((size_t)block <= (size_t)get_current_break());
+    return ((size_t)heap_start - BOUNDARY_TAG_SIZE <= (size_t)block) && ((size_t)block <= (size_t)get_current_break() && (size_t)block % ALIGNMENT_REQUIREMENT == 0);
 }
 
-static int check_errors_valid_list(size_t *block)
+static bool is_free_block_valid(size_t *payload_start)
 {
-    boundary_tag_t *block_header = get_header(block); // header helper done function
+    boundary_tag_t *header = get_header(payload_start);
 
-    if (!is_address_valid(block))
-    {
-        return ERROR_CODE;
+    if (!is_block_valid(header)) {
+        return false;
     }
-    if (block_header && is_allocated(block_header))
-    {
-        return ERROR_CODE;
+    if (is_allocated(*header)) {
+        return false;
     }
-    return SUCCESS_CODE;
-}
-
-static size_t *get_next_element(size_t *block)
-{
-    size_t *block_next = (size_t *)((size_t)block);
-
-    if (block_next == NULL)
-    {
-        return NULL;
-    }
-    return (size_t *)(*block_next);
+    return true;
 }
 
 static bool detect_cycle(size_t *start)
@@ -40,21 +27,18 @@ static bool detect_cycle(size_t *start)
     size_t *fast = start;
     size_t *next_fast = NULL;
 
-    while (slow != NULL && fast != NULL)
-    {
+    while (slow != NULL && fast != NULL) {
         slow = get_next_element(slow);
         next_fast = get_next_element(fast);
-        if (slow == NULL || next_fast == NULL)
-        {
+        if (slow == NULL || next_fast == NULL) {
             return false;
         }
         fast = get_next_element(next_fast);
-        if (fast == NULL)
-        {
+        if (fast == NULL) {
             return false;
         }
-        if (*slow == *fast)
-        {
+        // fprintf(stderr, "Slow pointer %ld fast %ld || slow %ld fast %ld\n", (size_t)slow, (size_t)fast, *slow, *fast);
+        if (*slow == *fast) {
             return true;
         }
     }
@@ -64,23 +48,23 @@ static bool detect_cycle(size_t *start)
 int check_free_list()
 {
     size_t *block_tmp = NULL;
+    size_t total_free_blocks = 0;
 
-    if (heap_start == NULL || *heap_start == 0)
-    {
-        return SUCCESS_CODE;
+    if (heap_start == NULL || *heap_start == 0) {
+        return 0;
     }
     block_tmp = (size_t *)(*heap_start);
-    if (detect_cycle(block_tmp))
-    {
-        return ERROR_CODE;
+    if (detect_cycle(block_tmp)) {
+        return -1;
     }
-    while (block_tmp != NULL)
-    {
-        if (check_errors_valid_list(block_tmp))
-        {
-            return ERROR_CODE;
+    while (block_tmp != NULL) {
+        if (!is_free_block_valid(block_tmp)) {
+            return -1;
         }
+        total_free_blocks += 1;
+        // fprintf(stderr, "Free block Header %ld || Size : %ld allocated %d // counter %ld \n", (size_t)get_header(block_tmp), get_size(*get_header(block_tmp)), is_allocated(*get_header(block_tmp)), total_free_blocks);
         block_tmp = get_next_element(block_tmp);
     }
-    return SUCCESS_CODE;
+    // fprintf(stderr, "Total free blocks heap %ld\n\n", total_free_blocks);
+    return total_free_blocks;
 }

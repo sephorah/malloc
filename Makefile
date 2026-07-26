@@ -9,6 +9,8 @@ SRC 		= 		src/malloc.c 			\
 					src/check_heap.c 		\
 					src/init_heap.c 		\
 					src/check_free_list.c 	\
+					src/boundary_tags.c 	\
+					src/malloc_usable_size.c \
 
 TSRC		=		tests/malloc.c 			\
 

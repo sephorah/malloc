@@ -1,26 +1,29 @@
 #ifndef MY_MALLOC_H_
 #define MY_MALLOC_H_
 
-#include <stdint.h>
+#include <stddef.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 
-#define ERROR_CODE 84
-#define SUCCESS_CODE 0
+// #include <stdio.h>
+#include <pthread.h>
+
 #define BOUNDARY_TAG_SIZE 16
 #define ALIGNMENT_REQUIREMENT 16
 #define EPILOGUE_SIZE 16
+#define MIN_BLOCK_SIZE 48
 #define CHECK_BIT(number, position) ((number) & (1 << position))
 #define CLEAR_BIT(number) (number & ~(1 << 0))
 #define SET_BIT(number, position) (number | (1 << position))
 
+extern pthread_mutex_t heap_start_mutex;
+
 typedef size_t boundary_tag_t;
 
-int is_allocated(boundary_tag_t *header);
+int is_allocated(boundary_tag_t header);
 
-size_t get_size(boundary_tag_t *header);
+size_t get_size(boundary_tag_t header);
 
 void *get_current_break(void);
 
@@ -57,5 +60,19 @@ boundary_tag_t *get_footer(size_t *header, size_t size);
 void mark_boundary_tag_allocated(boundary_tag_t *tag);
 
 void mark_boundary_tag_free(boundary_tag_t *tag);
+
+int count_free_blocks_heap(void);
+
+void add_block_free_list(size_t *ptr);
+
+bool is_block_valid(size_t *block_header);
+
+void remove_block_free_list(size_t *block_payload);
+
+void handle_leftover_space(size_t *header, size_t new_size);
+
+size_t *get_next_element(size_t *block);
+
+size_t malloc_usable_size(void *ptr);
 
 #endif /*MY_MALLOC_H_*/
