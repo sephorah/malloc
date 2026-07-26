@@ -1,10 +1,10 @@
 #include "my_malloc.h"
 
-extern size_t *heap_start;
+extern char *heap_start;
 
 static bool is_boundary_tag_valid(boundary_tag_t *tag)
 {
-    if (!is_address_valid(tag)) {
+    if (!is_address_valid((boundary_tag_t)tag)) {
         return false;
     }
     return true;
@@ -26,7 +26,7 @@ static bool is_size_valid(size_t size)
     return true;
 }
 
-bool is_block_valid(size_t *block_header)
+bool is_block_valid(boundary_tag_t *block_header)
 {
     size_t size = 0;
     boundary_tag_t *block_footer = NULL;
@@ -50,7 +50,7 @@ bool is_block_valid(size_t *block_header)
 
 int count_free_blocks_heap(void)
 {
-    size_t *block_tmp_header = NULL;
+    boundary_tag_t *block_tmp_header = NULL;
     size_t size_tmp = 0;
     size_t current_break = (size_t)get_current_break();
     size_t total_free_blocks = 0;
@@ -59,7 +59,7 @@ int count_free_blocks_heap(void)
         return 0;
     }
     block_tmp_header = get_header(heap_start);
-    while ((size_t)block_tmp_header < current_break) {
+    while ((boundary_tag_t)block_tmp_header < current_break) {
         size_tmp = get_size(*block_tmp_header);
         if (!is_block_valid(block_tmp_header)) {
             return -1;
@@ -67,14 +67,14 @@ int count_free_blocks_heap(void)
         if (!is_allocated(*block_tmp_header)) {
             total_free_blocks += 1;
         }
-        block_tmp_header = (size_t *)((size_t)block_tmp_header + size_tmp);
+        block_tmp_header = (boundary_tag_t *)((boundary_tag_t)block_tmp_header + size_tmp);
     }
     return total_free_blocks;
 }
 
 int check_heap(void)
 {
-    size_t *block_tmp_header = NULL;
+    boundary_tag_t *block_tmp_header = NULL;
     size_t size_tmp = 0;
     size_t current_break = (size_t)get_current_break();
     size_t total_blocks = 0;
@@ -83,13 +83,13 @@ int check_heap(void)
         return 0;
     }
     block_tmp_header = get_header(heap_start);
-    while ((size_t)block_tmp_header < current_break) {
+    while ((boundary_tag_t)block_tmp_header < current_break) {
         size_tmp = get_size(*block_tmp_header);
         if (!is_block_valid(block_tmp_header)) {
             return -1;
         }
         total_blocks += 1;
-        block_tmp_header = (size_t *)((size_t)block_tmp_header + size_tmp);
+        block_tmp_header = (boundary_tag_t *)((boundary_tag_t)block_tmp_header + size_tmp);
     }
     return total_blocks;
 }

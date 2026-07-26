@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <pthread.h>
 
@@ -30,9 +31,9 @@ void *malloc(size_t size);
 
 void free(void *ptr);
 
-size_t *merge_free_blocks(size_t *current_block);
+char *merge_free_blocks(char *current_block);
 
-void *init_epilogue(void);
+void init_epilogue(void);
 
 void init_heap(void);
 
@@ -44,17 +45,17 @@ size_t get_aligned_block_size(size_t payload_size);
 
 void *allocate_block(size_t size);
 
-size_t *add_optional_padding(size_t payload_size, void *start);
+char *add_optional_padding(size_t payload_size, void *start);
 
-bool is_address_valid(size_t *block_tmp);
+bool is_address_valid(size_t block);
 
 int check_heap(void);
 
 int check_free_list(void);
 
-boundary_tag_t *get_header(size_t *block_tmp);
+boundary_tag_t *get_header(char *block_tmp);
 
-boundary_tag_t *get_footer(size_t *header, size_t size);
+boundary_tag_t *get_footer(boundary_tag_t *header, size_t size);
 
 void mark_boundary_tag_allocated(boundary_tag_t *tag);
 
@@ -62,15 +63,15 @@ void mark_boundary_tag_free(boundary_tag_t *tag);
 
 int count_free_blocks_heap(void);
 
-void add_block_free_list(size_t *ptr);
+void add_block_free_list(char *ptr);
 
-bool is_block_valid(size_t *block_header);
+bool is_block_valid(boundary_tag_t *block_header);
 
-void remove_block_free_list(size_t *block_payload);
+void remove_block_free_list(char *block_payload);
 
-void handle_leftover_space(size_t *header, size_t new_size);
+void handle_leftover_space(boundary_tag_t *header, size_t new_size);
 
-size_t *get_next_element(size_t *block);
+char *get_next_element(char *block);
 
 size_t malloc_usable_size(void *ptr);
 

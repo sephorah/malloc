@@ -18,9 +18,9 @@ size_t get_aligned_block_size(size_t original_payload_size)
     return res;
 }
 
-size_t *add_optional_padding(size_t payload_size, void *start)
+char *add_optional_padding(size_t payload_size, void *start)
 {
-    return (size_t *)((size_t)start + payload_size);
+    return (char *)(start + payload_size);
 }
 
 boundary_tag_t *init_boundary_tag(boundary_tag_t *tag, size_t size)

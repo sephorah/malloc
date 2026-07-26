@@ -1,31 +1,30 @@
 #include "my_malloc.h"
 
-extern size_t *heap_start;
+extern char *heap_start;
 
-static void handle_free_block_found(boundary_tag_t *block_header, size_t *block_payload, size_t size)
+static void handle_free_block_found(boundary_tag_t *block_header, char *block_payload, size_t size)
 {
     remove_block_free_list(block_payload);
     handle_leftover_space(block_header, size);
 }
 
-size_t *get_next_element(size_t *block)
+char *get_next_element(char *block)
 {
-    size_t *block_next = (size_t *)((size_t)block);
     size_t *next_element = NULL;
 
-    if (block == NULL || !is_address_valid(block) || block_next == NULL || !is_address_valid(block_next)) {
+    if (block == NULL || !is_address_valid((size_t)(size_t *)block)) {
         return NULL;
     }
-    next_element = (size_t *)(*block_next);
-    if (next_element == NULL || !is_address_valid(next_element)) {
+    next_element = (size_t *)*(size_t *)block; // tricky
+    if (next_element == NULL || !is_address_valid((size_t)next_element)) {
         return NULL;
     }
-    return next_element;
+    return (char *)next_element;
 }
 
 static void *traverse_free_list(size_t size)
 {
-    size_t *block_tmp = (size_t *)(*heap_start);
+    char *block_tmp = (char *)*(size_t *)heap_start;
     boundary_tag_t *block_tmp_header = NULL;
     size_t size_tmp = 0;
 
@@ -43,7 +42,7 @@ static void *traverse_free_list(size_t size)
 
 static void *find_free_block(size_t size)
 {
-    if (*heap_start == 0) {
+    if (*(size_t *)heap_start == 0) {
         return NULL;
     }
     return traverse_free_list(size);
@@ -51,7 +50,7 @@ static void *find_free_block(size_t size)
 
 static void *add_free_block(size_t payload_size)
 {
-    size_t *current_break = get_current_break();
+    char *current_break = get_current_break();
     boundary_tag_t *new_block_header_address = get_header(current_break);
     void *new_block_payload = NULL;
     size_t block_size = 0;

@@ -1,25 +1,26 @@
 #include "my_malloc.h"
-extern size_t *heap_start;
 
-void add_block_free_list(size_t *ptr)
+extern char *heap_start;
+
+void add_block_free_list(char *ptr)
 {
-    size_t *ptr_prev = NULL;
+    char *ptr_prev = NULL;
     size_t *old_block_prev = NULL;
 
     if (heap_start == NULL) {
         return;
     }
-    ptr_prev = (size_t *)(ptr + 1);
-    if (*heap_start != 0) {
-        *ptr = *heap_start;
-        *ptr_prev = (size_t)heap_start;
-        old_block_prev = (size_t *)(*heap_start + sizeof(size_t));
-        *old_block_prev = (size_t)ptr;
+    ptr_prev = ptr + sizeof(void *);
+    if (*(size_t *)heap_start != 0) {
+        *(size_t *)ptr = *(size_t *)heap_start;
+        *(size_t *)ptr_prev = (size_t)heap_start;
+        old_block_prev = (size_t *)(*(size_t *)heap_start + sizeof(void *));
+        *old_block_prev = (size_t)(size_t *)ptr;
     } else {
-        *ptr = 0;
-        *ptr_prev = (size_t)heap_start;
+        *(size_t *)ptr = 0;
+        *(size_t *)ptr_prev = (size_t)heap_start;
     }
-    *heap_start = (size_t)ptr;
+    *(size_t *)heap_start = (size_t)ptr;
 }
 
 void free(void *ptr)

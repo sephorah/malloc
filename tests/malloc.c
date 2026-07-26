@@ -205,8 +205,8 @@ Test(malloc, many_mallocs)
     int (*check_heap)(void);
     int (*check_free_list)(void);
     int (*count_free_blocks_heap)(void);
-    size_t *current_break = NULL;
-    size_t *new_current_break = NULL;
+    char *current_break = NULL;
+    char *new_current_break = NULL;
     char *blocks[30];
 
     if (!handle) {

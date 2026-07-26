@@ -1,23 +1,23 @@
 #include "my_malloc.h"
 
-void remove_block_free_list(size_t *block_payload)
+void remove_block_free_list(char *block_payload)
 {
-    size_t *next_block = (size_t *)*block_payload;
-    size_t *prev_block = (size_t *)block_payload[1];
+    size_t *next_block = (size_t *)*(size_t *)block_payload;
+    size_t *prev_block = (size_t *)((size_t *)block_payload)[1];
 
-    if (next_block != NULL && is_address_valid(next_block)) {
+    if (next_block != NULL && is_address_valid((size_t)next_block)) {
         next_block[1] = (size_t)prev_block;
     }
-    if (prev_block != NULL && is_address_valid(prev_block)) {
-        *prev_block = *block_payload;
+    if (prev_block != NULL && is_address_valid((size_t)prev_block)) {
+        *prev_block = *(size_t *)block_payload;
     }
 }
 
-static boundary_tag_t *merge_next_block(size_t *current_block_header, size_t *current_block_footer)
+static boundary_tag_t *merge_next_block(boundary_tag_t *current_block_header, boundary_tag_t *current_block_footer)
 {
-    boundary_tag_t *next_block_header = (size_t *)((size_t)current_block_footer + BOUNDARY_TAG_SIZE);
+    boundary_tag_t *next_block_header = (boundary_tag_t *)((boundary_tag_t)current_block_footer + BOUNDARY_TAG_SIZE);
     boundary_tag_t *next_block_footer = NULL;
-    size_t *next_block_payload = (size_t *)((size_t)next_block_header + BOUNDARY_TAG_SIZE);
+    char *next_block_payload = (char *)((boundary_tag_t)next_block_header + BOUNDARY_TAG_SIZE);
     size_t next_block_size = 0;
 
     if (is_allocated(*next_block_header)) {
@@ -31,22 +31,22 @@ static boundary_tag_t *merge_next_block(size_t *current_block_header, size_t *cu
     return next_block_footer;
 }
 
-static boundary_tag_t *merge_prev_block(size_t *current_block_payload, boundary_tag_t *current_block_header, boundary_tag_t *current_block_footer)
+static boundary_tag_t *merge_prev_block(char *current_block_payload, boundary_tag_t *current_block_header, boundary_tag_t *current_block_footer)
 {
-    boundary_tag_t *prev_block_footer = (boundary_tag_t *)((size_t)current_block_payload - BOUNDARY_TAG_SIZE * 2);
+    boundary_tag_t *prev_block_footer = (boundary_tag_t *)(current_block_payload - BOUNDARY_TAG_SIZE * 2);
     boundary_tag_t *prev_block_header = NULL;
 
     if (prev_block_footer == 0 || is_allocated(*prev_block_footer)) {
         return current_block_header;
     }
-    prev_block_header = (boundary_tag_t *)((size_t)prev_block_footer - get_size(*prev_block_footer) + BOUNDARY_TAG_SIZE);
+    prev_block_header = (boundary_tag_t *)((boundary_tag_t)prev_block_footer - get_size(*prev_block_footer) + BOUNDARY_TAG_SIZE);
     *current_block_footer = get_size(*prev_block_footer) + get_size(*current_block_header);
     *prev_block_header = *current_block_footer;
     remove_block_free_list(current_block_payload);
     return prev_block_header;
 }
 
-size_t *merge_free_blocks(size_t *current_block_payload)
+char *merge_free_blocks(char *current_block_payload)
 {
     boundary_tag_t *current_block_header = get_header(current_block_payload);
     size_t current_block_size = get_size(*current_block_header);
