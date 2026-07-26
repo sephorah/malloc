@@ -165,6 +165,8 @@ Test(malloc, large_alloc)
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
 
     block = (*malloc)(1000000);
+    strcpy(block, "Epitech");
+    cr_assert_str_eq(block, "Epitech");
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
@@ -203,6 +205,7 @@ Test(malloc, aligned_address)
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
 
     block = (*malloc)(100);
+    cr_assert(((size_t)block % 16) == 0);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());

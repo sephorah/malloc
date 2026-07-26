@@ -3,9 +3,10 @@
 static bool check_available_space(char *ptr, size_t size)
 {
     boundary_tag_t *header = get_header(ptr);
-    size_t payload_size = get_size(*header) - BOUNDARY_TAG_SIZE * 2;
+    size_t current_block_size = get_size(*header);
+    size_t total_requested_size = size + BOUNDARY_TAG_SIZE * 2;
 
-    if (payload_size >= size) {
+    if (current_block_size >= total_requested_size) {
         return true;
     }
     return false;

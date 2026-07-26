@@ -139,7 +139,54 @@ Test(realloc, size_zero)
     dlclose(handle);
 }
 
-Test(realloc, grow)
+Test(realloc, in_place_grow)
+{
+    void *handle = dlopen("./libmalloc.so", RTLD_LAZY | RTLD_DEEPBIND);
+    void *(*malloc)(size_t size);
+    void *(*realloc)(void *ptr, size_t size);
+    void *(*free)(void *ptr);
+    int (*check_heap)(void);
+    int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
+    char *str = NULL;
+    char *new_str = NULL;
+
+    if (!handle) {
+        handle_error("Error handle");
+    }
+    malloc = dlsym(handle, "malloc");
+    realloc = dlsym(handle, "realloc");
+    free = dlsym(handle, "free");
+    check_heap = dlsym(handle, "check_heap");
+    check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
+    if (dlerror() != NULL) {
+        handle_error("Error dlerror");
+    }
+
+    cr_assert_eq((*check_heap)(), 0);
+    cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    str = (*malloc)(100);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    new_str = (*realloc)(str, 110);
+    cr_assert_str_eq(new_str, str);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    (*free)(new_str);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 1);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+    dlclose(handle);
+}
+
+Test(realloc, grow_new_block)
 {
     void *handle = dlopen("./libmalloc.so", RTLD_LAZY | RTLD_DEEPBIND);
     void *(*malloc)(size_t size);
