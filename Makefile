@@ -13,6 +13,8 @@ SRC 		= 		src/malloc.c 			\
 					src/malloc_usable_size.c \
 
 TSRC		=		tests/malloc.c 			\
+					tests/realloc.c 		\
+					tests/calloc.c 			\
 
 OBJ 		=		$(SRC:.c=.o)
 

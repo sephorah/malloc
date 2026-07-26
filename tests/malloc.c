@@ -30,15 +30,18 @@ Test(malloc, simple_alloc_free)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     str = (*malloc)(52);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     strcpy(str, "Epitech");
     cr_assert_str_eq(str, "Epitech");
+
     (*free)(str);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
@@ -68,23 +71,28 @@ Test(malloc, reuse_freed_block)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     str = (*malloc)(8);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     temp = str;
     (*free)(str);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     str = (*malloc)(8);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     cr_assert_eq(str, temp);
+
     (*free)(str);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
@@ -92,7 +100,7 @@ Test(malloc, reuse_freed_block)
     dlclose(handle);
 }
 
-Test(malloc, zero_size_alloc)
+Test(malloc, size_zero_alloc)
 {
     void *handle = dlopen("./libmalloc.so", RTLD_LAZY);
     void *(*malloc)(size_t size);
@@ -113,13 +121,16 @@ Test(malloc, zero_size_alloc)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     block = (*malloc)(0);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
@@ -148,13 +159,16 @@ Test(malloc, large_alloc)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     block = (*malloc)(1000000);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
@@ -183,13 +197,16 @@ Test(malloc, aligned_address)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     block = (*malloc)(100);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
@@ -220,15 +237,18 @@ Test(malloc, many_mallocs)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     for (int i = 0; i < 20; i++) {
         blocks[i] = (*malloc)(100);
     }
     cr_assert_eq((*check_heap)(), 22);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     for (int i = 0; i < 8; i++) {
         (*free)(blocks[i]);
     }
@@ -236,6 +256,7 @@ Test(malloc, many_mallocs)
     cr_assert_eq((*check_heap)(), 15);
     cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     for (int i = 20; i < 30; i++) {
         blocks[i] = (*malloc)(50);
     }
@@ -244,12 +265,14 @@ Test(malloc, many_mallocs)
     cr_assert_eq((*check_heap)(), 25);
     cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     for (int i = 8; i < 30; i++) {
         (*free)(blocks[i]);
     }
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     dlclose(handle);
 }
 
@@ -271,13 +294,16 @@ Test(free, handle_null)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     (*free)(NULL);
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     dlclose(handle);
 }
 
@@ -302,20 +328,25 @@ Test(free, double_free)
     if (dlerror() != NULL) {
         handle_error("Error dlerror");
     }
+
     cr_assert_eq((*check_heap)(), 0);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     block = (*malloc)(70);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     (*free)(block);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
     dlclose(handle);
 }

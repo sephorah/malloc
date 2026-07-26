@@ -11,11 +11,10 @@ void *calloc(size_t nmemb, size_t size)
     if (__builtin_mul_overflow(nmemb, size, &total)) {
         return NULL;
     }
-    total = nmemb * size;
     memory = malloc(total);
     if (memory == NULL) {
         return NULL;
     }
-    memset(memory, 0, nmemb * size);
+    memset(memory, 0, total);
     return memory;
 }
