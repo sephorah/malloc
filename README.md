@@ -66,7 +66,7 @@ Across 5 runs, `make re` ran 1.15–1.25 times faster than `LD_PRELOAD=path/to/l
 make tests_run
 ```
 
-Unit tests on `malloc`, `free`, `realloc` and `calloc`.
+Unit tests on `malloc`, `free`, `realloc`, `calloc` and `malloc_usable_size`.
 
 ## Examples of fixed bugs
 
