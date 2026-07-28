@@ -89,8 +89,8 @@ A block with a 0-byte payload size has its payload and its footer at the same ad
 
 ### Data race on the free list
 
-If `malloc` or `realloc` is requesting to shrink a block, the allocator can return the same starting address and recycle the leftover space into another freed block.
+When `realloc` shrinks a block, or when `malloc` serves a request from a free block larger than needed, the allocator can return the same starting address and recycle the leftover space into another free block.
 
-This led to more unsynchronized work (update the found block and insert leftover). On multi-threaded commands like `git status`, this surfaced data corruption in the heap. For example, when walking the free list, a block's header (which is supposed to store a block's size) read as a heap address. However, when a watchpoint was set on this header in `gdb`, its last value was a size, which probably meant that another thread modified it in the meantime.
+This led to more unsynchronized work (updating the found block and inserting the leftover). On multi-threaded commands like `git status`, this surfaced data corruption in the heap. For example, when walking the free list, a block's header (which is supposed to store a block's size) read as a heap address. However, when a watchpoint was set on this header in `gdb`, its last value was a size, which probably meant that another thread modified it in the meantime.
 
-**Fix:** set a mutex on the heap start so that only one thread can access the heap at a time.
+**Fix:** setting a mutex on the heap start, so that only one thread can access the heap at a time. After that, the bug was no longer reproducible.
