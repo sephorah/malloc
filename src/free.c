@@ -33,7 +33,8 @@ __attribute__((visibility("default"))) void free(void *ptr)
         return;
     }
     header_address = get_header(ptr);
-    if (!is_allocated(*header_address)) {
+    if (!is_block_valid(header_address) 
+        || !is_allocated(*header_address)) {
         pthread_mutex_unlock(&heap_start_mutex);
         return;
     }

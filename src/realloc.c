@@ -4,9 +4,10 @@ static bool check_available_space(char *ptr, size_t size)
 {
     boundary_tag_t *header = get_header(ptr);
     size_t current_block_size = get_size(*header);
-    size_t total_requested_size = size + BOUNDARY_TAG_SIZE * 2;
+    size_t total_requested_size = get_aligned_block_size(size);
 
-    if (current_block_size >= total_requested_size) {
+    if (total_requested_size != 0 &&
+        current_block_size >= total_requested_size) {
         return true;
     }
     return false;
@@ -30,7 +31,7 @@ static void *allocate_new_block(char *ptr, size_t size)
     size_t old_block_payload_size = 0;
 
     if (new_block == NULL) {
-        return ptr;
+        return NULL;
     }
     old_block_payload_size = get_old_block_payload_size(ptr, size);
     memcpy(new_block, ptr, old_block_payload_size);
@@ -46,6 +47,7 @@ static void add_leftover_block(boundary_tag_t *header, size_t size)
     *header = size;
     *footer = size;
     add_block_free_list(payload);
+    merge_free_blocks(payload);
 }
 
 static void shrink_block(boundary_tag_t *header, size_t new_size, size_t leftover_size)
@@ -74,11 +76,25 @@ void handle_leftover_space(boundary_tag_t *header, size_t new_size)
     }
 }
 
-__attribute__((visibility("default"))) void *realloc(void *ptr, size_t size)
+static void *retrieve_available_space(void *ptr, size_t size)
 {
     size_t block_size = 0;
     boundary_tag_t *header = NULL;
 
+    pthread_mutex_lock(&heap_start_mutex);
+    block_size = get_aligned_block_size(size);
+    if (block_size == 0) {
+        pthread_mutex_unlock(&heap_start_mutex);
+        return NULL;
+    }
+    header = get_header(ptr);
+    handle_leftover_space(header, block_size);
+    pthread_mutex_unlock(&heap_start_mutex);
+    return ptr;
+}
+
+__attribute__((visibility("default"))) void *realloc(void *ptr, size_t size)
+{
     if (ptr == NULL) {
         return malloc(size);
     }
@@ -87,12 +103,7 @@ __attribute__((visibility("default"))) void *realloc(void *ptr, size_t size)
         return NULL;
     }
     if (check_available_space(ptr, size)) {
-        pthread_mutex_lock(&heap_start_mutex);
-        block_size = get_aligned_block_size(size);
-        header = get_header(ptr);
-        handle_leftover_space(header, block_size);
-        pthread_mutex_unlock(&heap_start_mutex);
-        return ptr;
+        return retrieve_available_space(ptr, size);
     }
     return allocate_new_block(ptr, size);
 }

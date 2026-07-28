@@ -8,5 +8,5 @@ __attribute__((visibility("default"))) size_t malloc_usable_size(void *ptr)
         return 0;
     }
     header = get_header(ptr);
-    return get_size(*header);
+    return get_size(*header) - BOUNDARY_TAG_SIZE * 2;
 }

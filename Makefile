@@ -15,6 +15,7 @@ SRC 		= 		src/malloc.c 			\
 TSRC		=		tests/malloc.c 			\
 					tests/realloc.c 		\
 					tests/calloc.c 			\
+					tests/malloc_usable_size.c \
 
 OBJ 		=		$(SRC:.c=.o)
 
@@ -40,10 +41,11 @@ debug: re
 
 clean:
 	$(RM) $(OBJ)
+	$(RM) unit_tests
+	$(RM) unit_tests*.gcda unit_tests*.gcno
 
 fclean: clean
 	$(RM) $(NAME)
-	$(RM) test_main
 
 re: fclean all
 

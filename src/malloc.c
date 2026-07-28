@@ -48,19 +48,19 @@ static void *find_free_block(size_t size)
     return traverse_free_list(size);
 }
 
-static void *add_free_block(size_t payload_size)
+static void *create_free_block(boundary_tag_t *new_block_header_address, size_t payload_size)
 {
-    char *current_break = get_current_break();
-    boundary_tag_t *new_block_header_address = get_header(current_break);
-    void *new_block_payload = NULL;
-    size_t block_size = 0;
+    size_t block_size = get_aligned_block_size(payload_size);
     size_t optional_padding_size = 0;
+    void *new_block_payload = NULL;
     void *optional_padding = NULL;
 
-    if (new_block_header_address != NULL) {
-        block_size = get_aligned_block_size(payload_size);
+    if (block_size == 0) {
+        return NULL;
+    }
+    new_block_payload = allocate_block(block_size - BOUNDARY_TAG_SIZE);
+    if (new_block_payload != NULL) {
         init_boundary_tag(new_block_header_address, block_size);
-        new_block_payload = allocate_block(block_size - BOUNDARY_TAG_SIZE);
         optional_padding_size = block_size - (BOUNDARY_TAG_SIZE * 2 + payload_size);
         optional_padding = add_optional_padding(payload_size, new_block_payload);
         init_boundary_tag(optional_padding + optional_padding_size, block_size);
@@ -70,24 +70,44 @@ static void *add_free_block(size_t payload_size)
     return NULL;
 }
 
-__attribute__((visibility("default"))) void *malloc(size_t size)
+static void *add_free_block(size_t payload_size)
 {
-    void *free_block = NULL;
-    size_t block_size = 0;
+    char *current_break = get_current_break();
+    boundary_tag_t *new_block_header_address = get_header(current_break);
 
-    init_heap();
-    pthread_mutex_lock(&heap_start_mutex);
-    if (heap_start == NULL) {
-        pthread_mutex_unlock(&heap_start_mutex);
+    if (new_block_header_address == NULL) {
         return NULL;
     }
-    block_size = get_aligned_block_size(size);
-    free_block = find_free_block(block_size);
+    return create_free_block(new_block_header_address, payload_size);
+}
+
+static void *get_suitable_block(size_t block_size, size_t payload_size)
+{
+    size_t *free_block = find_free_block(block_size);
+
     if (free_block == NULL) {
-        free_block = add_free_block(size);
+        free_block = add_free_block(payload_size);
         pthread_mutex_unlock(&heap_start_mutex);
         return free_block;
     }
     pthread_mutex_unlock(&heap_start_mutex);
     return free_block;
+}
+
+__attribute__((visibility("default"))) void *malloc(size_t size)
+{
+    size_t block_size = 0;
+
+    pthread_mutex_lock(&heap_start_mutex);
+    init_heap();
+    if (heap_start == NULL) {
+        pthread_mutex_unlock(&heap_start_mutex);
+        return NULL;
+    }
+    block_size = get_aligned_block_size(size);
+    if (block_size == 0) {
+        pthread_mutex_unlock(&heap_start_mutex);
+        return NULL;
+    }
+    return get_suitable_block(block_size, size);
 }

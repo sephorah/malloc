@@ -8,10 +8,15 @@ static size_t get_valid_payload_size(size_t original_size)
 size_t get_aligned_block_size(size_t original_payload_size)
 {
     size_t payload_size = get_valid_payload_size(original_payload_size);
-    size_t total_size = BOUNDARY_TAG_SIZE * 2 + payload_size;
-    size_t div = total_size / ALIGNMENT_REQUIREMENT;
-    size_t res = div * ALIGNMENT_REQUIREMENT;
+    size_t total_size = 0;
+    size_t div = 0;
+    size_t res = 0;
 
+    if (__builtin_add_overflow(BOUNDARY_TAG_SIZE * 2, payload_size, &total_size)) {
+        return 0;
+    }
+    div = total_size / ALIGNMENT_REQUIREMENT;
+    res = div * ALIGNMENT_REQUIREMENT;
     if (total_size % ALIGNMENT_REQUIREMENT != 0) {
         res += ALIGNMENT_REQUIREMENT;
     }
@@ -41,33 +46,28 @@ void *allocate_block(size_t size)
 }
 
 static void *init_block_content(boundary_tag_t *block_start, size_t block_size,
-    size_t optional_padding_size, size_t payload_size)
+                                size_t optional_padding_size, size_t payload_size)
 {
     boundary_tag_t *header_start = init_boundary_tag(block_start, block_size);
-    boundary_tag_t *footer_start = NULL;
     void *payload_start = (void *)header_start + BOUNDARY_TAG_SIZE;
     void *optional_padding = NULL;
 
-    if (payload_start == NULL) {
-        return NULL;
-    }
     optional_padding = add_optional_padding(payload_size, payload_start);
-    if (optional_padding == NULL) {
-        return NULL;
-    }
-    footer_start = init_boundary_tag(optional_padding + optional_padding_size, block_size);
-    if (footer_start == NULL) {
-        return NULL;
-    }
+    init_boundary_tag(optional_padding + optional_padding_size, block_size);
     return payload_start;
 }
 
 void *init_block(size_t payload_size)
 {
     size_t block_size = get_aligned_block_size(payload_size);
-    size_t optional_padding_size = block_size - (BOUNDARY_TAG_SIZE * 2 + payload_size);
-    boundary_tag_t *block_start = allocate_block(block_size);
+    size_t optional_padding_size = 0;
+    boundary_tag_t *block_start = NULL;
 
+    if (block_size == 0) {
+        return NULL;
+    }
+    block_start = allocate_block(block_size);
+    optional_padding_size = block_size - (BOUNDARY_TAG_SIZE * 2 + payload_size);
     if (block_start == NULL) {
         return NULL;
     }

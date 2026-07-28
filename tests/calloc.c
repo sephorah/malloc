@@ -3,7 +3,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 
-int handle_error(char *str);
+void handle_error(char *str);
 
 Test(calloc, simple_calloc)
 {
@@ -77,9 +77,13 @@ Test(calloc, size_zero)
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
 
     array = calloc(20, 0);
-    cr_assert_eq(array, NULL);
-    cr_assert_eq((*check_heap)(), 0);
+    cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    (*free)(array);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }
@@ -111,9 +115,13 @@ Test(calloc, nmemb_zero)
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
 
     array = calloc(0, sizeof(char));
-    cr_assert_eq(array, NULL);
-    cr_assert_eq((*check_heap)(), 0);
+    cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    (*free)(array);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 1);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     dlclose(handle);
 }

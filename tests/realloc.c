@@ -3,7 +3,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 
-int handle_error(char *str);
+void handle_error(char *str);
 
 Test(realloc, shrink)
 {
@@ -58,6 +58,47 @@ Test(realloc, shrink)
     dlclose(handle);
 }
 
+Test(realloc, size_max)
+{
+    void *handle = dlopen("./libmalloc.so", RTLD_LAZY | RTLD_DEEPBIND);
+    void *(*malloc)(size_t size);
+    void *(*free)(void *ptr);
+    void *(*realloc)(void *ptr, size_t size);
+    int (*check_heap)(void);
+    int (*check_free_list)(void);
+    int (*count_free_blocks_heap)(void);
+    char *str = NULL;
+
+    if (!handle) {
+        handle_error("Error handle");
+    }
+    malloc = dlsym(handle, "malloc");
+    realloc = dlsym(handle, "realloc");
+    free = dlsym(handle, "free");
+    check_heap = dlsym(handle, "check_heap");
+    check_free_list = dlsym(handle, "check_free_list");
+    count_free_blocks_heap = dlsym(handle, "count_free_blocks_heap");
+    if (dlerror() != NULL) {
+        handle_error("Error dlerror");
+    }
+
+    cr_assert_eq((*check_heap)(), 0);
+    cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    str = (*malloc)(52);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+
+    str = (*realloc)(str, __SIZE_MAX__);
+    cr_assert_eq(str, NULL);
+    cr_assert_eq((*check_heap)(), 3);
+    cr_assert_eq((*check_free_list)(), 0);
+    cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
+    dlclose(handle);
+}
+
 Test(realloc, realloc_null)
 {
     void *handle = dlopen("./libmalloc.so", RTLD_LAZY | RTLD_DEEPBIND);
@@ -85,7 +126,7 @@ Test(realloc, realloc_null)
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
 
     str = (*realloc)(NULL, 52);
-    cr_assert_eq((*check_heap)(), 3, "got %ld\n", (*check_heap)());
+    cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
     strcpy(str, "Epitech");
@@ -174,7 +215,7 @@ Test(realloc, in_place_grow)
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());
 
     new_str = (*realloc)(str, 110);
-    cr_assert_str_eq(new_str, str);
+    cr_assert_eq(new_str, str);
     cr_assert_eq((*check_heap)(), 3);
     cr_assert_eq((*check_free_list)(), 0);
     cr_assert_eq((*count_free_blocks_heap)(), (*check_free_list)());

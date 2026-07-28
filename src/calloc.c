@@ -6,7 +6,7 @@ __attribute__((visibility("default"))) void *calloc(size_t nmemb, size_t size)
     size_t total = 0;
 
     if (nmemb == 0 || size == 0) {
-        return NULL;
+        return malloc(0);
     }
     if (__builtin_mul_overflow(nmemb, size, &total)) {
         return NULL;

@@ -43,8 +43,7 @@ hyperfine --warmup 1 -r 5 'make re' 'LD_PRELOAD=path/to/libmalloc.so make re'
 | glibc | 11.668 s ±  0.345 s | 10.665 s | 0.921 s |
 | this allocator | 13.363 s ±  0.292 s | 12.217 s | 1.057 s |
 
-Across 5 runs, `make re` ran 1.15 ± 0.04 times faster than `LD_PRELOAD=path/to/libmalloc.so make re`.
-It's likely explained by the first-fit which scans the free list linearly, unlike `glibc`'s malloc which can find suitable free chunks in bins, various lists based on size and history.
+Across 5 runs, `make re` ran 1.15–1.25 times faster than `LD_PRELOAD=path/to/libmalloc.so make re`. It's likely explained by the first-fit which scans the free list linearly, unlike `glibc`'s malloc which can find suitable free chunks in bins, various lists based on size and history.
 
 ### Memory cost
 
@@ -57,9 +56,9 @@ It's likely explained by the first-fit which scans the free list linearly, unlik
 
 | | glibc | this allocator | difference
 |---|---|---|---|
-| Maximum resident set size (kbytes) | 228996 | 259028 | +13.1% |
-| Major (requiring I/O) page faults | 0 | 2 | ~0 both |
-| Minor (reclaiming a frame) page faults | 589052 | 609646 | +3.5% |
+| Maximum resident set size (kbytes) | 229312 | 257296 | +12.2% |
+| Major (requiring I/O) page faults | 0 | 0 | none |
+| Minor (reclaiming a frame) page faults | 588874 | 608822 | +3.4% |
 
 ## Tests
 

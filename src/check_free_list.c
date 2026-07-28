@@ -38,14 +38,14 @@ static bool detect_cycle(char *start)
         if (fast == NULL) {
             return false;
         }
-        if (*slow == *fast) {
+        if (slow == fast) {
             return true;
         }
     }
     return false;
 }
 
-__attribute__((visibility("default"))) int check_free_list()
+__attribute__((visibility("default"))) int check_free_list(void)
 {
     char *block_tmp = NULL;
     size_t total_free_blocks = 0;
