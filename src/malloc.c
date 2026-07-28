@@ -70,7 +70,7 @@ static void *add_free_block(size_t payload_size)
     return NULL;
 }
 
-void *malloc(size_t size)
+__attribute__((visibility("default"))) void *malloc(size_t size)
 {
     void *free_block = NULL;
     size_t block_size = 0;

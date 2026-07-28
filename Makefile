@@ -22,7 +22,7 @@ NAME 		=	 	libmalloc.so
 
 CPPFLAGS	=		-iquote include/
 
-CFLAGS 		=		-fPIC -Werror -Wall -Wextra
+CFLAGS 		=		-fPIC -Werror -Wall -Wextra -fvisibility=hidden
 
 LDFLAGS 		=		-shared
 

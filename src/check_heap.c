@@ -48,7 +48,7 @@ bool is_block_valid(boundary_tag_t *block_header)
     return true;
 }
 
-int count_free_blocks_heap(void)
+__attribute__((visibility("default"))) int count_free_blocks_heap(void)
 {
     boundary_tag_t *block_tmp_header = NULL;
     size_t size_tmp = 0;
@@ -72,7 +72,7 @@ int count_free_blocks_heap(void)
     return total_free_blocks;
 }
 
-int check_heap(void)
+__attribute__((visibility("default"))) int check_heap(void)
 {
     boundary_tag_t *block_tmp_header = NULL;
     size_t size_tmp = 0;

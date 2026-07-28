@@ -74,7 +74,7 @@ void handle_leftover_space(boundary_tag_t *header, size_t new_size)
     }
 }
 
-void *realloc(void *ptr, size_t size)
+__attribute__((visibility("default"))) void *realloc(void *ptr, size_t size)
 {
     size_t block_size = 0;
     boundary_tag_t *header = NULL;

@@ -1,6 +1,6 @@
 #include "my_malloc.h"
 
-size_t malloc_usable_size(void *ptr)
+__attribute__((visibility("default"))) size_t malloc_usable_size(void *ptr)
 {
     boundary_tag_t *header = NULL;
 

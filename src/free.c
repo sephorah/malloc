@@ -23,7 +23,7 @@ void add_block_free_list(char *ptr)
     *(size_t *)heap_start = (size_t)ptr;
 }
 
-void free(void *ptr)
+__attribute__((visibility("default"))) void free(void *ptr)
 {
     boundary_tag_t *header_address = NULL;
 

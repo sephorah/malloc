@@ -1,6 +1,6 @@
 #include "my_malloc.h"
 
-void *calloc(size_t nmemb, size_t size)
+__attribute__((visibility("default"))) void *calloc(size_t nmemb, size_t size)
 {
     void *memory = NULL;
     size_t total = 0;
