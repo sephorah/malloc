@@ -15,7 +15,7 @@ char *get_next_element(char *block)
     if (block == NULL || !is_address_valid((size_t)(size_t *)block)) {
         return NULL;
     }
-    next_element = (size_t *)*(size_t *)block; // tricky
+    next_element = (size_t *)*(size_t *)block;
     if (next_element == NULL || !is_address_valid((size_t)next_element)) {
         return NULL;
     }
